@@ -1,0 +1,4 @@
+name: IAHolding
+version: '${version}'
+main: org.daengsik.mythicaddons.IAHolding
+api-version: '1.21'
