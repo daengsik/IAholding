@@ -15,10 +15,20 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven {
+        name = "mythiccraft"
+        url = "https://repo.mythiccraft.io/repository/maven-public/"
+    }
+    maven {
+        name = "jitpack"
+        url = "https://jitpack.io"
+    }
 }
 
 dependencies {
-compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
+    compileOnly "io.lumine:Mythic:5.4.0-SNAPSHOT"
+    compileOnly "com.github.LoneDev6:API-ItemsAdder:4.0.14"
 }
 
 def targetJavaVersion = 21

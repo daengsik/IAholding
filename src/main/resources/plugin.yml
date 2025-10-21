@@ -2,3 +2,7 @@ name: IAHolding
 version: '${version}'
 main: org.daengsik.mythicaddons.IAHolding
 api-version: '1.21'
+depend: [MythicMobs]
+softdepend: [ItemsAdder]
+description: MythicMobs addon for ItemsAdder item holding conditions
+author: daengsik
