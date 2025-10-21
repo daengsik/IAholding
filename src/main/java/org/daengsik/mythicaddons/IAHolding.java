@@ -1,8 +1,6 @@
 package org.daengsik.mythicaddons;
 
 import io.lumine.mythic.api.config.MythicLineConfig;
-import io.lumine.mythic.api.skills.SkillExecutor;
-import io.lumine.mythic.api.skills.conditions.ConditionFactory;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.daengsik.mythicaddons.conditions.IAHoldingCondition;
@@ -57,6 +55,16 @@ public final class IAHolding extends JavaPlugin {
         // MythicMobs에 커스텀 조건 등록
         registerConditions();
         
+        // MythicMobs reload 이벤트 리스너 등록
+        getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+            public void onMythicReload(io.lumine.mythic.bukkit.events.MythicReloadedEvent event) {
+                // MythicMobs 리로드 시 조건 재등록
+                getLogger().info("MythicMobs 리로드 감지 - iaholding 조건을 다시 등록합니다.");
+                registerConditions();
+            }
+        }, this);
+        
         getLogger().info("IAHolding 플러그인이 성공적으로 활성화되었습니다!");
     }
 
@@ -77,20 +85,72 @@ public final class IAHolding extends JavaPlugin {
      * - iaholding: ItemsAdder 아이템을 손에 들고 있는지 확인하는 조건
      * 
      * 등록 과정:
-     * 1. MythicBukkit 인스턴스에서 SkillExecutor 가져오기
-     * 2. ConditionFactory를 사용하여 "iaholding" 이름으로 조건 등록
+     * 1. MythicBukkit 인스턴스에서 ConditionManager 가져오기
+     * 2. "iaholding" 이름으로 조건 등록
      * 3. IAHoldingCondition 클래스와 연결
      * 4. 등록 완료 로그 출력
      */
     private void registerConditions() {
-        // MythicMobs의 스킬 시스템에 접근
-        SkillExecutor skills = MythicBukkit.inst().getSkills();
-        
-        // iaholding 조건을 MythicMobs에 등록
-        // ConditionFactory는 MythicMobs가 조건을 인스턴스화할 때 사용하는 팩토리 클래스
-        skills.registerCondition(new ConditionFactory("iaholding", 
-            (MythicLineConfig config) -> new IAHoldingCondition(config)));
-        
-        getLogger().info("ItemsAdder 아이템용 iaholding 조건이 등록되었습니다.");
+        // MythicMobs의 조건 시스템에 접근하여 커스텀 조건 등록
+        // ImmutableMap이므로 내부 필드에서 수정 가능한 Map을 찾아야 함
+        try {
+            Object skillManager = MythicBukkit.inst().getSkillManager();
+            boolean registered = false;
+            
+            // SkillManager의 모든 필드 검색
+            Class<?> currentClass = skillManager.getClass();
+            
+            // 상속 구조를 따라 올라가며 모든 필드 검색
+            while (currentClass != null && !registered) {
+                for (java.lang.reflect.Field field : currentClass.getDeclaredFields()) {
+                    String fieldName = field.getName().toLowerCase();
+                    
+                    // condition 관련 필드만 확인
+                    if (fieldName.contains("condition")) {
+                        field.setAccessible(true);
+                        try {
+                            Object fieldValue = field.get(skillManager);
+                            
+                            // Map 타입이고 ImmutableMap이 아닌 경우
+                            if (fieldValue instanceof java.util.Map) {
+                                String mapType = fieldValue.getClass().getName();
+                                
+                                // ImmutableMap이 아닌 수정 가능한 Map 찾기
+                                if (!mapType.contains("Immutable")) {
+                                    @SuppressWarnings("unchecked")
+                                    java.util.Map<String, Object> conditionsMap = 
+                                        (java.util.Map<String, Object>) fieldValue;
+                                    
+                                    try {
+                                        // MythicMobs는 Class 객체를 저장하고 자체적으로 인스턴스화함
+                                        // 조건 이름은 대문자로 저장해야 함!
+                                        conditionsMap.put("IAHOLDING", IAHoldingCondition.class);
+                                        
+                                        getLogger().info("✓ iaholding 조건이 등록되었습니다. (사용법: iaholding{i=iasurvival:아이템명})");
+                                        registered = true;
+                                        break;
+                                    } catch (UnsupportedOperationException e) {
+                                        // 무시하고 다음 필드 시도
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            // 무시하고 다음 필드 시도
+                        }
+                    }
+                }
+                
+                // 부모 클래스로 이동
+                currentClass = currentClass.getSuperclass();
+            }
+            
+            if (!registered) {
+                getLogger().severe("✗ iaholding 조건 등록 실패 - MythicMobs API를 찾을 수 없습니다.");
+            }
+            
+        } catch (Exception e) {
+            getLogger().severe("조건 등록 실패: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

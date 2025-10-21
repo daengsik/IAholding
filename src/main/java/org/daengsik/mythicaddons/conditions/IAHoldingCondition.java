@@ -4,33 +4,27 @@ import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.api.adapters.AbstractEntity;
 import io.lumine.mythic.api.config.MythicLineConfig;
 import io.lumine.mythic.api.skills.conditions.IEntityCondition;
+import io.lumine.mythic.core.skills.SkillCondition;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
  * IAHoldingCondition - ItemsAdder 아이템을 손에 들고 있는지 확인하는 MythicMobs 커스텀 조건
- * 
- * 이 클래스는 MythicMobs의 IEntityCondition 인터페이스를 구현하여
+ 
+ * 이 클래스는 MythicMobs의 SkillCondition을 상속하고 IEntityCondition 인터페이스를 구현하여
  * 플레이어가 특정 ItemsAdder 커스텀 아이템을 메인 핸드에 들고 있는지 확인합니다.
- * 
- * 기능:
- * - ItemsAdder API를 사용하여 커스텀 아이템 인식
+
+ * - ItemsAdder API 사용
  * - 네임스페이스 ID 기반 정확한 매칭 (대소문자 무시)
  * - 플레이어만 대상으로 제한
  * - 메인 핸드 아이템만 체크
- * 
- * 사용법:
- * Conditions:
- * - iaholding{i=custom:myitem}
- * - iaholding{i=iasurvival:rice}
- * - iaholding{id=custom:sword}
- * - iaholding{item=custom:bow}
+
  * 
  * @author daengsik
  * @version 1.0-SNAPSHOT
  * @since MythicMobs 5.9.5, ItemsAdder 4.0.14
  */
-public class IAHoldingCondition implements IEntityCondition {
+public class IAHoldingCondition extends SkillCondition implements IEntityCondition {
     
     /**
      * 확인할 ItemsAdder 아이템의 네임스페이스 ID
@@ -41,20 +35,23 @@ public class IAHoldingCondition implements IEntityCondition {
     /**
      * IAHoldingCondition 생성자
      * 
-     * MythicMobs 설정에서 파라미터를 파싱하여 필요한 ItemsAdder 아이템 ID를 추출합니다.
+     * MythicMobs 5.9.5의 표준 생성자 시그니처: (String conditionName, MythicLineConfig config)
      * 
+     * @param line 조건 이름 (예: "iaholding")
      * @param config MythicMobs에서 전달하는 설정 객체
      *               지원하는 파라미터: "i", "id", "item"
      *               예: iaholding{i=custom:myitem}
      */
-    public IAHoldingCondition(MythicLineConfig config) {
+    public IAHoldingCondition(String line, MythicLineConfig config) {
+        super(line);
+        
         // 설정에서 아이템 ID 파싱: iaholding{i=custom:myitem}
         // 여러 파라미터명을 지원하여 사용자 편의성 향상
         this.requiredIaId = config.getString(new String[]{"i", "id", "item"}, "").trim();
     }
     
     /**
-     * 조건을 확인하는 메서드
+     * 조건 확인 메서드
      * 
      * 플레이어가 지정된 ItemsAdder 아이템을 메인 핸드에 들고 있는지 확인합니다.
      * 

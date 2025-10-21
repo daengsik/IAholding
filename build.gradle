@@ -16,8 +16,8 @@ repositories {
         url = "https://oss.sonatype.org/content/groups/public/"
     }
     maven {
-        name = "mythiccraft"
-        url = "https://repo.mythiccraft.io/repository/maven-public/"
+        name = "lumine-repo"
+        url = "https://mvn.lumine.io/repository/maven-public/"
     }
     maven {
         name = "jitpack"
@@ -27,8 +27,12 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
-    compileOnly "io.lumine:Mythic:5.4.0-SNAPSHOT"
-    compileOnly "com.github.LoneDev6:API-ItemsAdder:4.0.14"
+    
+    // MythicMobs와 ItemsAdder는 서버의 플러그인 jar 파일을 사용합니다
+    // libs 폴더에 다음 파일들을 복사해주세요:
+    // 1. MythicMobs-x.x.x.jar (또는 MythicLib-x.x.x.jar)
+    // 2. ItemsAdder-x.x.x.jar
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 }
 
 def targetJavaVersion = 21
